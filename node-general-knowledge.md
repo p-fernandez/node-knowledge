@@ -53,7 +53,7 @@ Those suck for maintenance and they're ugly. Ideally, I'd like to have the same 
 
 There are only solutions here that work cross-platform, because 42% of Node.js users use Windows as their desktop environment (source).
 
-0. The Container
+### 0. The Container
 * Learn all about Dependency Injection and Inversion of Control containers. Example implementation using Electrolyte here: [github/branneman/nodejs-app-boilerplate)](http://github/branneman/nodejs-app-boilerplate)
 
 * Create an entry-point file like this:
@@ -78,7 +78,7 @@ More detailed example module: [app/areas/homepage/index.js](https://github.com/b
 
 * Profit
 
-1. The Symlink
+### 1. The Symlink
 Stolen from: [focusaurus](https://github.com/focusaurus) / [express_code_structure](https://github.com/focusaurus/express_code_structure) # [the-app-symlink-trick](https://github.com/focusaurus/express_code_structure#the-app-symlink-trick)
 
 * Create a symlink under `node_modules` to your app directory:
@@ -100,7 +100,7 @@ Alternatively, you can create the symlink on the npm postinstall hook, as descri
   }
 ```
 
-2. The Global
+### 2. The Global
 * In your app.js:
 ```
 global.__base = __dirname + '/';
@@ -111,7 +111,7 @@ global.__base = __dirname + '/';
 var Article = require(__base + 'app/models/article');
 ```
 
-3. The Module
+### 3. The Module
 * Install some module:
 ```
 npm install app-module-path --save
@@ -126,14 +126,14 @@ require('app-module-path').addPath(__dirname + '/app');
 var Article = require('models/article');
 ```
 
-4. The Environment
+### 4. The Environment
 Set the `NODE_PATH` environment variable to the absolute path of your application, ending with the directory you want your modules relative to (in my case .).
 
 There are 2 ways of achieving the following require() statement from anywhere in your application:
 ```
 var Article = require('app/models/article');
 ```
-4.1. Up-front
+#### 4.1. Up-front
 Before running your node app, first run:
 
 Linux: `export NODE_PATH=.`
@@ -141,7 +141,7 @@ Windows: `set NODE_PATH=.`
 
 Setting a variable like this with export or set will remain in your environment as long as your current shell is open. To have it globally available in any shell, set it in your userprofile and reload your environment.
 
-4.2. Only while executing node
+#### 4.2. Only while executing node
 This solution will not affect your environment other than what node preceives. It does change your application start command.
 
 Start your application like this from now on:
@@ -150,7 +150,7 @@ Windows: `cmd.exe /C "set NODE_PATH=.&& node app"`
 
 (On Windows this command will not work if you put a space in between the path and the &&. Crazy shit.)
 
-5. The Start-up Script
+### 5. The Start-up Script
 Effectively, this solution also uses the environment (as in 4.2), it just abstracts it away.
 
 With one of these solutions (5.1 & 5.2) you can start your application like this from now on:
@@ -159,10 +159,10 @@ Windows: `app`
 
 An advantage of this solution is that if you want to force your node app to always be started with v8 parameters like `--harmony` or `--use_strict`, you can easily add them in the start-up script as well.
 
-5.1. Node.js
+#### 5.1. Node.js
 Example implementation: [https://gist.github.com/branneman/8775568](https://gist.github.com/branneman/8775568)
 
-5.2. OS-specific start-up scripts
+#### 5.2. OS-specific start-up scripts
 Linux, create app.sh in your project root:
 ```
 #!/bin/sh
@@ -175,7 +175,7 @@ Windows, create app.bat in your project root:
 cmd.exe /C "set NODE_PATH=.&& node app.js"
 ```
 
-6. The Hack
+### 6. The Hack
 Courtesy of [@joelabair](https://github.com/joelabair). Effectively also the same as 4.2, but without the need to specify the `NODE_PATH` outside your application, making it more fool proof. However, since this relies on a private Node.js core method, this is also a hack that might stop working on the previous or next version of node.
 
 This code needs to be placed in your app.js, before any require() calls:
@@ -184,7 +184,7 @@ process.env.NODE_PATH = __dirname;
 require('module').Module._initPaths();
 ```
 
-7. The Wrapper
+### 7. The Wrapper
 Courtesy of [@a-ignatov-parc](https://github.com/a-ignatov-parc). Another simple solution which increases obviousness, simply wrap the require() function with one relative to the path of the application's entry point file.
 
 Place this code in your app.js, again before any require() calls:
