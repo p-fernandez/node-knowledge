@@ -133,7 +133,9 @@ There are 2 ways of achieving the following require() statement from anywhere in
 ```
 var Article = require('app/models/article');
 ```
+
 #### 4.1. Up-front
+
 Before running your node app, first run:
 
 Linux: `export NODE_PATH=.`
@@ -160,6 +162,7 @@ Windows: `app`
 An advantage of this solution is that if you want to force your node app to always be started with v8 parameters like `--harmony` or `--use_strict`, you can easily add them in the start-up script as well.
 
 #### 5.1. Node.js
+
 Example implementation: [https://gist.github.com/branneman/8775568](https://gist.github.com/branneman/8775568)
 
 #### 5.2. OS-specific start-up scripts
