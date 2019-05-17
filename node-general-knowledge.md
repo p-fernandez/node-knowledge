@@ -134,6 +134,7 @@ There are 2 ways of achieving the following require() statement from anywhere in
 var Article = require('app/models/article');
 ```
 
+
 #### 4.1. Up-front
 Before running your node app, first run:
 
@@ -161,7 +162,8 @@ Windows: `app`
 An advantage of this solution is that if you want to force your node app to always be started with v8 parameters like `--harmony` or `--use_strict`, you can easily add them in the start-up script as well.
 
 #### 5.1. Node.js
-Example implementation: [https://gist.github.com/branneman/8775568](https://gist.github.com/branneman/8775568)
+Example implementation:
+[https://gist.github.com/branneman/8775568](https://gist.github.com/branneman/8775568)
 
 #### 5.2. OS-specific start-up scripts
 Linux, create app.sh in your project root:
@@ -237,9 +239,32 @@ Between each run of the event loop, Node.js checks if it is waiting for any asyn
 [Source](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
 
 ## 7.- What is the Call Stack? Is it part of V8?
-The call stack is the basic mechanism for javascript code execution. When we call a function, we push the function parameters and the return address to the stack. This allows to runtime to know where to continue code execution once the function ends. In Node.js, the Call Stack is handled by V8.
+The call stack is the basic mechanism for JavaScript code execution. When we call a function, we push the function parameters and the return address to the stack. This allows to runtime to know where to continue code execution once the function ends. In Node.js, the Call Stack is handled by V8.
 
-[Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
+The Call Stack is a data structure which records basically where in the program we are. If we step into a function, we put it on the top of the stack. If we return from a function, we pop off the top of the stack. That’s all the stack can do.
+
+Let’s see an example. Take a look at the following code:
+```
+function multiply(x, y) {
+    return x * y;
+}
+
+function printSquare(x) {
+    var s = multiply(x, x);
+    console.log(s);
+}
+
+printSquare(5);
+```
+
+When the engine starts executing this code, the Call Stack will be empty. Afterwards, the steps will be the following:
+![Call Stack Diagram](https://cdn-images-1.medium.com/max/1600/1*Yp1KOt_UJ47HChmS9y7KXw.png "Call Stack Diagram")
+
+Each entry in the Call Stack is called a Stack Frame.
+
+
+[Source 1](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
+[Source 2](https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf)
 
 ## 8.- What is the difference between setImmediate and process.nextTick?
 Use setImmediate if you want to queue the function behind whatever I/O event callbacks that are already in the event queue. Use process.nextTick to effectively queue the function at the head of the event queue so that it executes immediately after the current function completes.
