@@ -135,7 +135,6 @@ var Article = require('app/models/article');
 ```
 
 #### 4.1. Up-front
-
 Before running your node app, first run:
 
 Linux: `export NODE_PATH=.`
@@ -162,7 +161,6 @@ Windows: `app`
 An advantage of this solution is that if you want to force your node app to always be started with v8 parameters like `--harmony` or `--use_strict`, you can easily add them in the start-up script as well.
 
 #### 5.1. Node.js
-
 Example implementation: [https://gist.github.com/branneman/8775568](https://gist.github.com/branneman/8775568)
 
 #### 5.2. OS-specific start-up scripts
@@ -209,7 +207,14 @@ var Article = require.main.require('app/models/article');
 [Source](https://gist.github.com/branneman/8048520)
 
 ## 5.- Can different versions of the same package be used in the same application?
-// TO-DO
+Yes, they can be used. There are some packages that take of that issue but from my point of view is easier to use built in package manager features. For example, in Yarn it can be done by:
+```
+yarn add <alias-package>@npm:<package>
+```
+
+This will install a package under a custom alias. Aliasing, allows multiple versions of the same dependency to be installed, each referenced via the alias-package name given. For example, `yarn add my-foo@npm:foo` will install the package `foo` (at the latest version) in your dependencies under the specified alias `my-foo`. Also, `yarn add my-foo@npm:foo@1.0.1` allows a specific version of foo to be installed.
+
+[Source](https://yarnpkg.com/lang/en/docs/cli/add/#toc-yarn-add-alias)
 
 ## 6.- What is the Event Loop? Is it part of V8?
 
