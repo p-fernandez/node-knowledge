@@ -16,7 +16,7 @@ Also there are different new JavaScript engines including Rhino, JavaScriptCore,
 ## 2.- How come when you declare a global variable in any Node.js file it’s not really global to all modules?
 
 If you have module1 that defines a top-level variable g:
-```
+```javascript
 // module1.js
 var g = 42;
 ```
@@ -31,7 +31,7 @@ That's because every Node.js file gets its own IIFE [(Immediately Invoked Functi
 ## 3.- When exporting the API of a Node module, why can we sometimes use exports and other times we have to use module.exports?
 
 You can always use `module.exports` to export the API of your modules. You can also use exports except for one case:
-```
+```javascript
 module.exports.g = ...  // Ok
 exports.g = ...         // Ok
 module.exports = ...    // Ok
@@ -46,7 +46,7 @@ Why?
 ## 4.- Can we require local files without using relative paths?
 
 When the directory structure of your Node.js application (not library!) has some depth, you end up with a lot of annoying relative paths in your require calls like:
-```
+```javascript
 var Article = require('../../../models/article');
 ```
 Those suck for maintenance and they're ugly. Ideally, I'd like to have the same basepath from which I require() all my modules. Like any other language environment out there. I'd like the require() calls to be first-and-foremost relative to my application entry point file, in my case `app.js`.
@@ -57,7 +57,7 @@ There are only solutions here that work cross-platform, because 42% of Node.js u
 * Learn all about Dependency Injection and Inversion of Control containers. Example implementation using Electrolyte here: [github/branneman/nodejs-app-boilerplate)](http://github/branneman/nodejs-app-boilerplate)
 
 * Create an entry-point file like this:
-```
+```javascript
 const IoC = require('electrolyte');
 IoC.use(IoC.dir('app'));
 IoC.use(IoC.node_modules());
@@ -65,7 +65,7 @@ IoC.create('server').then(app => app());
 ```
 
 * You can now define your modules like this:
-```
+```javascript
 module.exports = factory;
 module.exports['@require'] = [
     'lib/read',
@@ -74,6 +74,7 @@ module.exports['@require'] = [
 ];
 function factory(read, { sendHTML, push }, render) { /* ... */ }
 ```
+
 More detailed example module: [app/areas/homepage/index.js](https://github.com/branneman/nodejs-app-boilerplate/blob/master/app/areas/homepage/index.js)
 
 * Profit
@@ -82,19 +83,19 @@ More detailed example module: [app/areas/homepage/index.js](https://github.com/b
 Stolen from: [focusaurus](https://github.com/focusaurus) / [express_code_structure](https://github.com/focusaurus/express_code_structure) # [the-app-symlink-trick](https://github.com/focusaurus/express_code_structure#the-app-symlink-trick)
 
 * Create a symlink under `node_modules` to your app directory:
-```
+```console
 Linux: ln -nsf node_modules app
 Windows: mklink /D app node_modules
 ```
 
 * Now you can require local modules like this from anywhere:
-```
+```js
 var Article = require('models/article');
 ```
 Note: you can not have a symlink like this inside a Git repo, since Git does not handle symlinks cross-platform. If you can live with a post-clone git-hook and/or the instruction for the next developer to create a symlink, then sure.
 
 Alternatively, you can create the symlink on the npm postinstall hook, as described by [scharf](https://github.com/scharf) in this [awesome comment](https://gist.github.com/branneman/8048520#comment-1412502). Put this inside your package.json:
-```
+```js
 "scripts": {
     "postinstall" : "node -e \"var s='../src',d='node_modules/src',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   }
@@ -102,27 +103,27 @@ Alternatively, you can create the symlink on the npm postinstall hook, as descri
 
 ### 2. The Global
 * In your app.js:
-```
+```js
 global.__base = __dirname + '/';
 ```
 
 * In your very/far/away/module.js:
-```
+```js
 var Article = require(__base + 'app/models/article');
 ```
 
 ### 3. The Module
 * Install some module:
-```
+```console
 npm install app-module-path --save
 ```
 
 * In your app.js, before any require() calls:
-```
+```js
 require('app-module-path').addPath(__dirname + '/app');
 ```
 * In your very/far/away/module.js:
-```
+```js
 var Article = require('models/article');
 ```
 
@@ -130,7 +131,7 @@ var Article = require('models/article');
 Set the `NODE_PATH` environment variable to the absolute path of your application, ending with the directory you want your modules relative to (in my case .).
 
 There are 2 ways of achieving the following require() statement from anywhere in your application:
-```
+```js
 var Article = require('app/models/article');
 ```
 
@@ -167,7 +168,7 @@ Example implementation:
 
 #### 5.2. OS-specific start-up scripts
 Linux, create app.sh in your project root:
-```
+```bash
 #!/bin/sh
 NODE_PATH=. node app.js
 ```
@@ -182,7 +183,7 @@ cmd.exe /C "set NODE_PATH=.&& node app.js"
 Courtesy of [@joelabair](https://github.com/joelabair). Effectively also the same as 4.2, but without the need to specify the `NODE_PATH` outside your application, making it more fool proof. However, since this relies on a private Node.js core method, this is also a hack that might stop working on the previous or next version of node.
 
 This code needs to be placed in your app.js, before any require() calls:
-```
+```js
 process.env.NODE_PATH = __dirname;
 require('module').Module._initPaths();
 ```
@@ -191,18 +192,18 @@ require('module').Module._initPaths();
 Courtesy of [@a-ignatov-parc](https://github.com/a-ignatov-parc). Another simple solution which increases obviousness, simply wrap the require() function with one relative to the path of the application's entry point file.
 
 Place this code in your app.js, again before any require() calls:
-```
+```js
 global.rootRequire = function(name) {
     return require(__dirname + '/' + name);
 }
 ```
 You can then require modules like this:
-```
+```js
 var Article = rootRequire('app/models/article');
 ```
 
 Another option is to always use the initial `require()` function, basically the same trick without a wrapper. Node.js creates a new scoped `require()` function for every new module, but there's always a reference to the initial global one. Unlike most other solutions this is actually a documented feature. It can be used like this:
-```
+```js
 var Article = require.main.require('app/models/article');
 ```
 
@@ -210,7 +211,7 @@ var Article = require.main.require('app/models/article');
 
 ## 5.- Can different versions of the same package be used in the same application?
 Yes, they can be used. There are some packages that take of that issue but from my point of view is easier to use built in package manager features. For example, in Yarn it can be done by:
-```
+```console
 yarn add <alias-package>@npm:<package>
 ```
 
@@ -235,8 +236,8 @@ Event Loop phases:
 
 Between each run of the event loop, Node.js checks if it is waiting for any asynchronous I/O or timers and shuts down cleanly if there are not any.
 
-[Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
-[Source](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+[Source 1](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
+[Source 2](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
 
 ## 7.- What is the Call Stack? Is it part of V8?
 The call stack is the basic mechanism for JavaScript code execution. When we call a function, we push the function parameters and the return address to the stack. This allows to runtime to know where to continue code execution once the function ends. In Node.js, the Call Stack is handled by V8.
@@ -244,7 +245,7 @@ The call stack is the basic mechanism for JavaScript code execution. When we cal
 The Call Stack is a data structure which records basically where in the program we are. If we step into a function, we put it on the top of the stack. If we return from a function, we pop off the top of the stack. That’s all the stack can do.
 
 Let’s see an example. Take a look at the following code:
-```
+```js
 function multiply(x, y) {
     return x * y;
 }
@@ -270,7 +271,6 @@ Each entry in the Call Stack is called a Stack Frame.
 Use setImmediate if you want to queue the function behind whatever I/O event callbacks that are already in the event queue. Use process.nextTick to effectively queue the function at the head of the event queue so that it executes immediately after the current function completes.
 
 So in a case where you're trying to break up a long running, CPU-bound job using recursion, you would now want to use setImmediate rather than process.nextTick to queue the next iteration as otherwise any I/O event callbacks wouldn't get the chance to run between iterations.
-[Source](https://stackoverflow.com/questions/15349733/setimmediate-vs-nexttick#15349865)
 
 * process.nextTick()
 The callback of a process.nextTick() is placed at the head of the event queue and is completely processed before I/O or timer callbacks but still after execution of the current execution context. It is used when we need to postpone emitting an event until after the caller has had the chance to register an event listener for this event. Technically, is not part of the event loop even though is part of the asynchronous API.
@@ -283,7 +283,7 @@ Actually in a sense it is closer to process.nextTick. The difference with nextTi
 NOTE: the names are counter-intuitive since in reality the setImmediate callback is actually executed after the process.nextTick callback.
 
 Executing the following code:
-```
+```js
 setTimeout(function() {
     console.log("TIMEOUT");
 }, 0);
@@ -297,22 +297,67 @@ process.nextTick(function() {
 });
 ```
 the output will be:
-```
+```console
 NEXTTICK
 IMMEDIATE
 TIMEOUT
 ```
 
-[Source](http://becausejavascript.com/node-js-process-nexttick-vs-setimmediate/)
-[Source](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+[Source 1](https://stackoverflow.com/questions/15349733/setimmediate-vs-nexttick#15349865)
+[Source 2](http://becausejavascript.com/node-js-process-nexttick-vs-setimmediate/)
+[Source 3](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
 
 ## 9.- How do you make an asynchronous function return a value?
 
-You could return a promise resolving to that value, for example return Promise.resolve(true).
+You could return a promise resolving to that value, for example:
+```js
+return Promise.resolve(true)
+```
 
 [Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
 
 ## 10.- Can callbacks be used with promises or is it one way or the other?
+Callbacks are not interchangeable with Promises. This means that callback-based APIs cannot be used as Promises. The main difference with callback-based APIs is it does not return a value, it just executes the callback with the result. A Promise-based API, on the other hand, immediately returns a Promise that wraps the asynchronous operation, and then the caller uses the returned Promise object and calls .then() and .catch() on it to declare what will happen when the operations has finished.
+
+You can use callbacks as promises by _promisifying_ them. Since Node.js v.8 there is the built-in module `util` that allows to convert callback functions into promises.
+```js
+import request from 'request';
+import { promisify } from 'util';
+
+const requestPromise = promisify(request);
+```
+
+To create own's _promisify_ method the following code can be used:
+```js
+const pkg = require('pkg'); 
+
+export class Foo {
+   getProperty(value, cb){
+     pkg.doSomething(value, cb);
+   }
+  
+   getProperty(value){
+     return new Promise((resolve, reject) => {
+       this.getProperty(value, (err,val) => err ? reject(err) : resolve(val));
+     });
+   }
+  
+}
+```
+And used like this:
+```js
+const foo = new Foo();
+
+// callback
+foo.getProperty('bar', (err, val) => {
+ // logic 
+});
+
+// promise 
+foo.getProperty('bar').then(val => {
+ // logic 
+});
+```
 
 
 What Node module is implemented by most other Node modules?
