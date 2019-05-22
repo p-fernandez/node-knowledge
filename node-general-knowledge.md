@@ -360,13 +360,100 @@ foo.getProperty('bar').then(val => {
 ```
 
 
-What Node module is implemented by most other Node modules?
-What are the major differences between spawn, exec, and fork?
-How does the cluster module work? How is it different than using a load balancer?
-What are the --harmony-* flags?
-How can you read and inspect the memory usage of a Node.js process?
-What will Node do when both the call stack and the event loop queue are empty?
-What are V8 object and function templates?
+## 11.- What Node module is implemented by most other Node modules?
+
+// TO-DO
+
+
+## 12.- What are the major differences between spawn, exec, and fork?
+
+They are all part of the `child_process` module. Also all of them are asynchronous and calling them will return an object which is an instance of the `ChildProcess` class.
+
+* `spawn` is a command used to run system commands, so it will run in its own process but won't execute any further code within the node process. No new V8 instance is created unless you execute a new node command. Only one copy of the node module is active on the processor. The `spawn` method returns a streaming interface for I/O operations (`stdout & stderr`). So it is great for handling applications that produce large amounts of data or for working with data as it reads in.
+```js
+const spawn = require('child_process').spawn;
+const fs = require('fs');
+function resize(req, resp) {
+    const args = [
+        "-", // use stdin
+        "-resize", "640x", // resize width to 640
+        "-resize", "x360<", // resize height if it's smaller than 360
+        "-gravity", "center", // sets the offset to the center
+        "-crop", "640x360+0+0", // crop
+        "-" // output to stdout
+    ];
+    const streamIn = fs.createReadStream('./path/to/an/image');
+    const proc = spawn('convert', args);
+    streamIn.pipe(proc.stdin);
+    proc.stdout.pipe(resp);
+}
+```
+
+* `exec` is a command that will spawn a subshell and execute the command in that shell (mapped to /bin/sh (Linux) / cmd.exe (Win)) and buffer generated data. It allows to execute more than one command in that shell. It should be used when any shell functionality is needed such pipes, redirects, backgrounding, etc.
+```js
+const exec = require('child_process').exec;
+exec('for i in $( ls -LR ); do echo item: $i; done', (e, stdout, stderr)=> {
+    if (e instanceof Error) {
+        console.error(e);
+        throw e;
+    }
+    console.log('stdout ', stdout);
+    console.log('stderr ', stderr);
+});
+```
+
+* `fork` is a special instance of `spawn` that runs a fresh instance of the V8 engine, it creates child processes. It is mostly used to create a worker pool so you can take advantage of all the cores of the machine. The `fork` method returns an object with a built-in communication channel (IPC) in addition to the methods of a normal ChildProcess instance. It is useful to unload long running tasks such computational ones so Node's main process doesn't get blocked for it.
+```js
+//parent.js
+const cp = require('child_process');
+const n = cp.fork(`${__dirname}/sub.js`);
+n.on('message', (m) => {
+  console.log('PARENT got message:', m);
+});
+n.send({ hello: 'world' });
+//sub.js
+process.on('message', (m) => {
+  console.log('CHILD got message:', m);
+});
+process.send({ foo: 'bar' });
+```
+
+[Source1](https://dzone.com/articles/understanding-execfile-spawn-exec-and-fork-in-node)
+[Source2](https://stackoverflow.com/questions/17861362/node-js-child-process-difference-between-spawn-fork)
+
+
+## 13.- How does the cluster module work? How is it different than using a load balancer?
+
+// TO-DO
+
+
+## 14.- What are the --harmony-* flags?
+
+Are flags inside Node.js that allow to enable staged features only, i.e. completed features that have not been considered stable yet.
+
+
+## 15.- How can you read and inspect the memory usage of a Node.js process?
+
+Using `process.memoryUsage()`. `memoryUsage` returns an object with various information: `rss`, `heapTotal`, `heapUsed` (and external):
+```js
+// Response
+rss 25.63 MB
+heapTotal 5.49 MB
+heapUsed 3.6 MB
+external 0.01 MB
+```
+
+
+## 16.- What will Node do when both the call stack and the event loop queue are empty?
+
+It will stop and kill the Node.js process by exiting.
+
+
+## 17.- What are V8 object and function templates?
+
+// TO-DO
+
+
 What is libuv and how does Node.js use it?
 How can you make Node’s REPL always use JavaScript strict mode?
 What is process.argv? What type of data does it hold?
