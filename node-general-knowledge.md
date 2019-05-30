@@ -446,12 +446,83 @@ external 0.01 MB
 
 ## 16.- What will Node do when both the call stack and the event loop queue are empty?
 
-It will stop and kill the Node.js process by exiting.
+It will simply exit.
+
+When you run a Node program, Node will automatically start the event loop and when that event loop is idle and has nothing else to do, the process will exit.
+
+To keep a Node process running, you need to place something somewhere in event queues. For example, when you start a timer or an HTTP server you are basically telling the event loop to keep running and checking on these events.
 
 
 ## 17.- What are V8 object and function templates?
 
-// TO-DO
+A template is a blueprint for JavaScript functions and objects in a context. You can use a template to wrap C++ functions and data structures within JavaScript objects so that they can be manipulated by JavaScript scripts. For example, Google Chrome uses templates to wrap C++ DOM nodes as JavaScript objects and to install functions in the global namespace. You can create a set of templates and then use the same ones for every new context you make. You can have as many templates as you require. However you can only have one instance of any template in any given context.
+
+In JavaScript there is a strong duality between functions and objects. To create a new type of object in Java or C++ you would typically define a new class. In JavaScript you create a new function instead, and create instances using the function as a constructor. The layout and functionality of a JavaScript object is closely tied to the function that constructed it. This is reflected in the way V8 templates work. There are two types of templates:
+
+ - Function templates
+
+A function template is the blueprint for a single function. You create a JavaScript instance of the template by calling the template’s `GetFunction` method from within the context in which you wish to instantiate the JavaScript function. You can also associate a C++ callback with a function template which is called when the JavaScript function instance is invoked.
+
+ - Object templates
+
+Each function template has an associated object template. This is used to configure objects created with this function as their constructor. You can associate two types of C++ callbacks with object templates:
+
+ * accessor callbacks are invoked when a specific object property is accessed by a script
+ * interceptor callbacks are invoked when any object property is accessed by a script
+
+[Source1](https://medium.com/@hyperandroid/javascript-native-wrappers-in-v8-part-i-67851a3a797a)
+[Source2](https://v8.dev/docs/embed)
+
+
+## 18.- What are circular modular dependencies in Node and how can they be avoided?
+ 
+Let’s now try to answer the important question about circular dependency in Node: What happens when module 1 requires module 2, and module 2 requires module 1?
+
+To find out, let’s create two files module1.js and module2.js under lib/ and have them require each other: 
+```js
+// lib/module1.js
+exports.a = 1;
+
+require("./module2");
+
+exports.b = 2;
+exports.c = 3;
+```
+
+```js
+// lib/module2.js
+
+const Module1 = require("./module1");
+console.log("Module1 is partially loaded here", Module1);
+```
+
+When we execute module1.js, we see the following:
+```bash
+$ node lib/module1.js0
+Module1 is partially loaded here { a: 1 }
+```
+
+We required `module2` before `module1` was fully loaded and since `module2` required `module1` while it wasn’t fully loaded, what we get from the exports object at that point are all the properties exported prior to the circular dependency. Only the a property was reported because both b and c were exported after module2 required and printed module1.
+
+Node keeps this really simple. During the loading of a module, it builds the exports object. You can require the module before it’s done loading and you’ll just get a partial exports object with whatever was defined so far.
+
+To avoid them there are different approaches:
+- If module A and module2 are always used together, merge them in same module might be a good idea.
+- Using composite pattern to break the dependency.
+- In database models, having model A and model B, wanting to reference model B in model A (to join operations), exporting several A and B properties (the ones not depending on other modules) before using the `require` function.
+```js
+function ModuleA() {
+}
+
+module.exports = ModuleA;
+
+var moduleB = require('./b');
+
+ModuleA.hello = function () {
+  console.log('hello!');
+};
+```
+
 
 
 What is libuv and how does Node.js use it?
@@ -469,7 +540,6 @@ What is the string_decoder module useful for? How is it different than casting b
 What are the 5 major steps that the require function does?
 How can you check for the existence of a local module?
 What is the main property in package.json useful for?
-What are circular modular dependencies in Node and how can they be avoided?
 What are the 3 file extensions that will be automatically tried by the require function?
 When creating an http server and writing a response for a request, why is the end() function required?
 When is it ok to use the file system *Sync methods?
