@@ -523,9 +523,66 @@ ModuleA.hello = function () {
 };
 ```
 
+## 19.- What is libuv and how does Node.js use it?
+
+Event loop is message dispatcher that waits for and dispatches events or messages in a program. It works by making a request to some internal or external event provider (which generally blocks the request until an event has arrived), and then it calls the relevant event handler (dispatches the event). The event loop may be used in conjunction with a reactor if the event provider follows the file interface which can be selected or polled. The event loop almost always operates asynchronously with the message originator.
+
+V8 can accept event loop as an argument when you are creating V8 Environment. But before setting up an event loop to V8 we need to implement it first…
+
+To accommodate the single-threaded event loop, Node.js uses the [libuv](https://libuv.org/) library. Without libuv Node.js is just a synchronous JavaScript\C++ execution. It is a C library.
+
+The I/O (or event) loop is the central part of libuv. It establishes the content for all I/O operations, and it’s meant to be tied to a single thread. One can run multiple event loops as long as each runs in a different thread.
+Which, in turn, is to use a fixed-sized thread pool that handles the execution of some of the non-blocking asynchronous I/O operations in parallel. The main thread call functions post tasks to the shared task queue, which threads in the thread pool pull and execute.
+
+libuv doesn't use thread for asynchronous tasks, but for those that aren't asynchronous by nature. As an example, it doesn't use threads to deal with sockets, it uses threads to make synchronous fs calls asynchronous.
+
+So, basically, we can include libuv sources into NodeJS and create V8 Environment with libuv default event loop in there. Here is an implementation of it.
+
+```cpp
+Environment* CreateEnvironment(Isolate* isolate, uv_loop_t* loop, Handle<Context> context, int argc, const char* const* argv, int exec_argc, const char* const* exec_argv) {
+  HandleScope handle_scope(isolate);
+
+  Context::Scope context_scope(context);
+  Environment* env = Environment::New(context, loop);
+
+  isolate->SetAutorunMicrotasks(false);
+
+  uv_check_init(env->event_loop(), env->immediate_check_handle());
+  uv_unref(reinterpret_cast<uv_handle_t*>(env->immediate_check_handle()));
+  uv_idle_init(env->event_loop(), env->immediate_idle_handle());
+  uv_prepare_init(env->event_loop(), env->idle_prepare_handle());
+  uv_check_init(env->event_loop(), env->idle_check_handle());
+  uv_unref(reinterpret_cast<uv_handle_t*>(env->idle_prepare_handle()));
+  uv_unref(reinterpret_cast<uv_handle_t*>(env->idle_check_handle()));
+
+  // Register handle cleanups
+  env->RegisterHandleCleanup(reinterpret_cast<uv_handle_t*>(env->immediate_check_handle()), HandleCleanup, nullptr);
+  env->RegisterHandleCleanup(reinterpret_cast<uv_handle_t*>(env->immediate_idle_handle()), HandleCleanup, nullptr);
+  env->RegisterHandleCleanup(reinterpret_cast<uv_handle_t*>(env->idle_prepare_handle()), HandleCleanup, nullptr);
+  env->RegisterHandleCleanup(reinterpret_cast<uv_handle_t*>(env->idle_check_handle()), HandleCleanup, nullptr);
+
+  if (v8_is_profiling) {
+    StartProfilerIdleNotifier(env);
+  }
+
+  Local<FunctionTemplate> process_template = FunctionTemplate::New(isolate);
+  process_template->SetClassName(FIXED_ONE_BYTE_STRING(isolate, "process"));
+
+  Local<Object> process_object = process_template->GetFunction()->NewInstance();
+  env->set_process_object(process_object);
+
+  SetupProcessObject(env, argc, argv, exec_argc, exec_argv);
+  LoadAsyncWrapperInfo(env);
+
+  return env;
+}
+```
+
+[Source1](https://www.freecodecamp.org/news/node-js-what-when-where-why-how-ab8424886e2/)
+[Source2](https://stackoverflow.com/questions/46753611/in-node-js-what-is-libuv-and-does-it-use-all-core#46754428)
+[Source3](https://blog.ghaiklor.com/how-nodejs-works-bfe09efc80ca)
 
 
-What is libuv and how does Node.js use it?
 How can you make Node’s REPL always use JavaScript strict mode?
 What is process.argv? What type of data does it hold?
 How can we do one final operation before a Node process exits? Can that operation be done asynchronously?
