@@ -424,7 +424,11 @@ process.send({ foo: 'bar' });
 
 ## 13.- How does the cluster module work? How is it different than using a load balancer?
 
-// TO-DO
+Node cluster core module has a master process listening on a port and then distributes the connections to different workers being all run in the same host. A round-robin algorithm is used to distribute the load between workers. This is the default approach since v.6.0.0. In practice however, distribution tends to be very unbalanced due to operating system scheduler vagaries. Loads have been observed where over 70% of all connections ended up in just two processes, out of a total of eight. Also the master process will work almost as much as the worker processes with less request rate than other solutions such load balancing.
+
+A load balancer such the likes of Nginx, in contrast, is used to distribute incoming connections across multiple hosts. 
+
+[Source1](https://medium.com/@fermads/node-js-process-load-balancing-comparing-cluster-iptables-and-nginx-6746aaf38272)
 
 
 ## 14.- What are the --harmony-* flags?
@@ -523,6 +527,7 @@ ModuleA.hello = function () {
 };
 ```
 
+
 ## 19.- What is libuv and how does Node.js use it?
 
 Event loop is message dispatcher that waits for and dispatches events or messages in a program. It works by making a request to some internal or external event provider (which generally blocks the request until an event has arrived), and then it calls the relevant event handler (dispatches the event). The event loop may be used in conjunction with a reactor if the event provider follows the file interface which can be selected or polled. The event loop almost always operates asynchronously with the message originator.
@@ -583,7 +588,15 @@ Environment* CreateEnvironment(Isolate* isolate, uv_loop_t* loop, Handle<Context
 [Source3](https://blog.ghaiklor.com/how-nodejs-works-bfe09efc80ca)
 
 
-How can you make Node’s REPL always use JavaScript strict mode?
+## 20.- How can you make Node’s REPL always use JavaScript strict mode?
+
+You can run Node.js with the `--use_strict` flag which will open the REPL in strict mode.
+
+```bash
+node --use_strict index.js
+```
+
+
 What is process.argv? What type of data does it hold?
 How can we do one final operation before a Node process exits? Can that operation be done asynchronously?
 What are some of the built-in dot commands that you can use in Node’s REPL?
