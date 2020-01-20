@@ -597,10 +597,86 @@ node --use_strict index.js
 ```
 
 
-What is process.argv? What type of data does it hold?
-How can we do one final operation before a Node process exits? Can that operation be done asynchronously?
-What are some of the built-in dot commands that you can use in Node’s REPL?
-Besides V8 and libuv, what other external dependencies does Node have?
+## 21. What is process.argv? What type of data does it hold?
+
+The `process.argv` property returns an array containing the command line arguments passed when the Node.js process was launched. The first element will be `process.execPath`. See `process.argv0` if access to the original value of `argv[0]` is needed. The second element will be the path to the JavaScript file being executed. The remaining elements will be any additional command line arguments.
+
+For example, assuming the following script for process-args.js:
+```javascript
+// print process.argv
+process.argv.forEach((val, index) => {
+  console.log(`${index}: ${val}`);
+});
+```
+
+Launching the Node.js process as:
+```bash
+$ node process-args.js one two=three four
+```
+
+Would generate the output:
+```bash
+0: /usr/local/bin/node
+1: /Users/mjr/work/node/process-args.js
+2: one
+3: two=three
+4: four
+```
+[Source](https://nodejs.org/api/all.html#process_process_argv)
+
+
+## 22. How can we do one final operation before a Node process exits? Can that operation be done asynchronously?
+
+By registering a handler for `process.on('exit')`:
+```javascript
+process.on('exit', (code) => {
+  console.log(`About to exit with code: ${code}`);
+});
+```
+
+Listener functions must only perform synchronous operations. The Node.js process will exit immediately after calling the `exit` event listeners causing any additional work still queued in the event loop to be abandoned. In the following example, for instance, the timeout will never occur:
+```javascript
+process.on('exit', (code) => {
+  setTimeout(() => {
+    console.log('This will not run');
+  }, 0);
+});
+```
+
+The `beforeExit` event is emitted when Node.js empties its event loop and has no additional work to schedule. Normally, the Node.js process will exit when there is no work scheduled, but a listener registered on the `beforeExit` event can make asynchronous calls, and thereby cause the Node.js process to continue.
+
+[Source1](https://nodejs.org/api/process.html#process_event_exit)
+[Source2](https://nodejs.org/api/process.html#process_event_beforeexit)
+
+## 23. Besides V8 and libuv, what other external dependencies does Node have?
+
+The following are all separate libraries that a Node process can use:
+
+- [http-parser](https://github.com/joyent/http-parser/): a lightweight C library which handles HTTP parsing
+- [c-areas](http://c-ares.haxx.se/docs.html): used for some asynchronous DNS requests
+- [OpenSSL](https://www.openssl.org/docs/): used extensively in both the `tls` and `crypto` modules
+- [zlib](http://www.zlib.net/manual.html): used for fast compression and decompression
+
+All of them are external to Node. They have their own source code. They also have their own license. Node just uses them.
+
+[Source](https://medium.com/edge-coders/you-dont-know-node-6515a658a1ed)
+
+
+## 24. What are some of the built-in dot commands that you can use in Node’s REPL?
+
+The following dot commands can be used:
+
+`.break` - When in the process of inputting a multi-line expression, entering the `.break` command (or pressing the `<ctrl>-C` key combination) will abort further input or processing of that expression.
+`.clear` - Resets the REPL ‘context’ to an empty object and clears any multi-line expression currently being input.
+`.exit` - Close the I/O stream, causing the REPL to exit.
+`.help` - Show this list of special commands.
+`.save` - Save the current REPL session to a file: > `.save ./file/to/save.js`
+`.load` - Load a file into the current REPL session. > `.load ./file/to/load.js`
+`.editor` - Enter editor mode (`<ctrl>-D` to finish, `<ctrl>-C` to cancel)
+
+[Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
+
+
 What’s the problem with the process uncaughtException event? How is it different than the exit event?
 What does the _ mean inside of Node’s REPL?
 Do Node buffers use V8 memory? Can they be resized?
