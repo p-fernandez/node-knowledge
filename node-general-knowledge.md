@@ -648,6 +648,7 @@ The `beforeExit` event is emitted when Node.js empties its event loop and has no
 [Source1](https://nodejs.org/api/process.html#process_event_exit)
 [Source2](https://nodejs.org/api/process.html#process_event_beforeexit)
 
+
 ## 23. Besides V8 and libuv, what other external dependencies does Node have?
 
 The following are all separate libraries that a Node process can use:
@@ -677,8 +678,29 @@ The following dot commands can be used:
 [Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
 
 
-What’s the problem with the process uncaughtException event? How is it different than the exit event?
-What does the _ mean inside of Node’s REPL?
+## 25. What’s the problem with the process uncaughtException event? How is it different than the exit event?
+
+`uncaughtException` is a crude mechanism for exception handling intended to be used only as a last resort. The event should not be used as an equivalent to `On Error Resume Next`. Unhandled exceptions inherently mean that an application is in an undefined state. Attempting to resume application code without properly recovering from the exception can cause additional unforeseen and unpredictable issues.
+
+Exceptions thrown from within the event handler will not be caught. Instead the process will exit with a non-zero exit code and the stack trace will be printed. This is to avoid infinite recursion.
+
+Attempting to resume normally after an uncaught exception can be similar to pulling out the power cord when upgrading a computer. Nine out of ten times, nothing happens. But the tenth time, the system becomes corrupted.
+
+The correct use of `uncaughtException` is to perform synchronous cleanup of allocated resources (e.g. file descriptors, handles, etc) before shutting down the process. It is not safe to resume normal operation after `uncaughtException`.
+
+To restart a crashed application in a more reliable way, whether `uncaughtException` is emitted or not, an external monitor should be employed in a separate process to detect application failures and recover or restart as needed.
+
+The exit event is emitted when the Node.js process is about the exit as a result of either:
+- The `process.exit()` method being called explicitly
+- The event loop has no additional work to perform
+
+[Source](https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly)
+
+## 26. What does the _ mean inside of Node’s REPL?
+
+Node’s REPL always sets _ to the result of the last expression.
+
+
 Do Node buffers use V8 memory? Can they be resized?
 What’s the difference between Buffer.alloc and Buffer.allocUnsafe?
 How is the slice method on buffers different from that on arrays?
