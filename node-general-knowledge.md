@@ -362,7 +362,7 @@ foo.getProperty('bar').then(val => {
 
 ## 11.- What Node module is implemented by most other Node modules?
 
-// TO-DO
+Between the core modules, I would say that most implemented module would be Modules, because it contains the code for all the importing and exporting functionalities for the Node.js modules (require, exports) that are needed to include any module.
 
 
 ## 12.- What are the major differences between spawn, exec, and fork?
@@ -701,9 +701,33 @@ The exit event is emitted when the Node.js process is about the exit as a result
 Node’s REPL always sets _ to the result of the last expression.
 
 
-Do Node buffers use V8 memory? Can they be resized?
-What’s the difference between Buffer.alloc and Buffer.allocUnsafe?
-How is the slice method on buffers different from that on arrays?
+## 27. Do Node buffers use V8 memory? Can they be resized?
+
+Buffer is an area of memory. It represents a fixed-size chunk of memory (can’t be resized) allocated outside of the V8 JavaScript engine.
+Then the answer to both questions would be a straight no.
+
+[Source](https://nodejs.org/en/knowledge/advanced/buffers/how-to-use-buffers/)
+
+
+## 28. What’s the difference between Buffer.alloc and Buffer.allocUnsafe?
+
+`Buffer.alloc` allocates a memory chunk, initializes it (sets every cell to either zero or some predefined value) and returns a Node.js Buffer wrapping this memory chunk.
+`Buffer.allocUnsafe` skips the initialization stage. Instead it returns a Buffer pointing to uninitialized memory. This reduces the allocation time duration, but creates a possibility for (sensitive) data leakage, if this uninitialized memory is exposed to the user. Thus, you should only use `Buffer.allocUnsafe` if you plan to initialize the memory chunk yourself.
+
+[Source1](https://nodejs.org/dist/latest-v12.x/docs/api/buffer.html#buffer_class_method_buffer_alloc_size_fill_encoding)
+[Source2](https://nodejs.org/dist/latest-v12.x/docs/api/buffer.html#buffer_class_method_buffer_allocunsafe_size)
+
+
+## 29. How is the slice method on buffers different from that on arrays?
+
+The `Buffer.slice()` method on buffers is a mutating operation which modifies the memory in the original buffer.
+The `Array.prototype.slice()` method returns a shallow copy of a portion of an array and does not modify it.
+
+[Source1](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
+[Source2](https://nodejs.org/api/buffer.html#buffer_buf_slice_start_end)
+
+
+
 What is the string_decoder module useful for? How is it different than casting buffers to strings?
 What are the 5 major steps that the require function does?
 How can you check for the existence of a local module?
