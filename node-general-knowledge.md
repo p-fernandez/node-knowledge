@@ -13,6 +13,7 @@ Also there are different new JavaScript engines including Rhino, JavaScriptCore,
 [Source](https://stackoverflow.com/questions/42616120/what-is-the-relationship-between-node-js-and-v8)
 [Source](https://medium.freecodecamp.org/understanding-the-core-of-nodejs-the-powerful-chrome-v8-engine-79e7eb8af964)
 
+
 ## 2.- How come when you declare a global variable in any Node.js file it’s not really global to all modules?
 
 If you have module1 that defines a top-level variable g:
