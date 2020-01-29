@@ -264,9 +264,9 @@ When the engine starts executing this code, the Call Stack will be empty. Afterw
 
 Each entry in the Call Stack is called a Stack Frame.
 
-
 [Source 1](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
 [Source 2](https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf)
+
 
 ## 8.- What is the difference between setImmediate and process.nextTick?
 Use setImmediate if you want to queue the function behind whatever I/O event callbacks that are already in the event queue. Use process.nextTick to effectively queue the function at the head of the event queue so that it executes immediately after the current function completes.
@@ -308,6 +308,7 @@ TIMEOUT
 [Source 2](http://becausejavascript.com/node-js-process-nexttick-vs-setimmediate/)
 [Source 3](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
 
+
 ## 9.- How do you make an asynchronous function return a value?
 
 You could return a promise resolving to that value, for example:
@@ -316,6 +317,7 @@ return Promise.resolve(true)
 ```
 
 [Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
+
 
 ## 10.- Can callbacks be used with promises or is it one way or the other?
 Callbacks are not interchangeable with Promises. This means that callback-based APIs cannot be used as Promises. The main difference with callback-based APIs is it does not return a value, it just executes the callback with the result. A Promise-based API, on the other hand, immediately returns a Promise that wraps the asynchronous operation, and then the caller uses the returned Promise object and calls .then() and .catch() on it to declare what will happen when the operations has finished.
@@ -428,6 +430,8 @@ process.send({ foo: 'bar' });
 Node cluster core module has a master process listening on a port and then distributes the connections to different workers being all run in the same host. A round-robin algorithm is used to distribute the load between workers. This is the default approach since v.6.0.0. In practice however, distribution tends to be very unbalanced due to operating system scheduler vagaries. Loads have been observed where over 70% of all connections ended up in just two processes, out of a total of eight. Also the master process will work almost as much as the worker processes with less request rate than other solutions such load balancing.
 
 A load balancer such the likes of Nginx, in contrast, is used to distribute incoming connections across multiple hosts. 
+
+In summary, clustering would be vertical scaling and load balancing would be horizontal scaling. Also in a Docker based infrastructure clustering is unnecessary since we are most likely running each application inside a container, running on a single core VM. For this situation, the horizontal scaling can be achieved using Docker Swarm or Kubernetes clustering features.
 
 [Source1](https://medium.com/@fermads/node-js-process-load-balancing-comparing-cluster-iptables-and-nginx-6746aaf38272)
 
@@ -669,11 +673,17 @@ All of them are external to Node. They have their own source code. They also hav
 The following dot commands can be used:
 
 `.break` - When in the process of inputting a multi-line expression, entering the `.break` command (or pressing the `<ctrl>-C` key combination) will abort further input or processing of that expression.
+
 `.clear` - Resets the REPL ‘context’ to an empty object and clears any multi-line expression currently being input.
+
 `.exit` - Close the I/O stream, causing the REPL to exit.
+
 `.help` - Show this list of special commands.
+
 `.save` - Save the current REPL session to a file: > `.save ./file/to/save.js`
+
 `.load` - Load a file into the current REPL session. > `.load ./file/to/load.js`
+
 `.editor` - Enter editor mode (`<ctrl>-D` to finish, `<ctrl>-C` to cancel)
 
 [Source](https://asafdav2.github.io/2017/how-well-do-you-know-node-js-answers-part-1/)
@@ -728,15 +738,55 @@ The `Array.prototype.slice()` method returns a shallow copy of a portion of an a
 [Source2](https://nodejs.org/api/buffer.html#buffer_buf_slice_start_end)
 
 
+## 30. What is the main property in package.json useful for?
+
+The main field is a module ID that is the primary entry point to your program. That is, if your package is named `foo`, and a user installs it, and then does `require("foo")`, then your main module’s exports object will be returned.
+This should be a module ID relative to the root of your package folder.
+For most modules, it makes the most sense to have a main script and often not much else.
+
+[Source](https://docs.npmjs.com/files/package.json#main)
+
+
+## 31. What are the 3 file extensions that will be automatically tried by the require function?
+
+`*.js`, `*.json` and `*.node`
+
+
+## 32. What does the --inspect argument do for the node command?
+
+The `--inspect` flag enables the Inspector Agent which makes the Node.js process listen for a debugging client.
+
+
+## 33. How can you print only one level of a deeply nested object?
+
+Using `util.inspect()` and setting the option attribute `depth` that specifies the number of times to recurse while formatting object. Useful for inspecting large objects. To recurse up to the maximum call stack size pass `Infinity` or `null`.
+
+```javascript
+const util = require('util');
+
+const obj = {
+  a: 1,
+  b: 2,
+  c: {
+    d: 3,
+    e: 4,
+  },
+};
+
+console.log(util.inspect(obj, { depth: 1 }));
+
+// { a: 1, b: 2, c: [Object] }
+```
+
+[Source](https://nodejs.org/api/util.html#util_util_inspect_object_options)
+
+
 
 What is the string_decoder module useful for? How is it different than casting buffers to strings?
 What are the 5 major steps that the require function does?
 How can you check for the existence of a local module?
-What is the main property in package.json useful for?
-What are the 3 file extensions that will be automatically tried by the require function?
 When creating an http server and writing a response for a request, why is the end() function required?
 When is it ok to use the file system *Sync methods?
-How can you print only one level of a deeply nested object?
 What is the node-gyp package used for?
 The objects exports, require, and module are all globally available in every module but they are different in every module. How?
 If you execute a node script file that has the single line: console.log(arguments);, what exactly will node print?
@@ -746,7 +796,6 @@ What happens when the line cluster.fork() gets executed in a Node script?
 What’s the difference between using event emitters and using simple callback functions to allow for asynchronous handling of code?
 What is the console.time function useful for?
 What’s the difference between the Paused and the Flowing modes of readable streams?
-What does the --inspect argument do for the node command?
 How can you read data from a connected socket?
 The require function always caches the module it requires. What can you do if you need to execute the code in a required module many times?
 When working with streams, when do you use the pipe function and when do you use events? Can those two methods be combined?
